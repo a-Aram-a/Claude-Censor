@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Claude Censor</title>
+  <link rel="stylesheet" href="popup.css">
+  <script type="module" src="popup.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Claude Censor</h1>
+    <label class="switch" title="Enable or disable on all tabs">
+      <input id="enabled" type="checkbox" role="switch" aria-label="Enable censoring">
+      <span></span>
+    </label>
+  </header>
+
+  <main>
+    <ul id="rules" aria-label="Rules"></ul>
+
+    <form id="new-rule" class="rule" novalidate>
+      <input name="censored" placeholder="Censored text" aria-label="Censored text" autocomplete="off" spellcheck="false" autofocus>
+      <span class="arrow" aria-hidden="true">→</span>
+      <input name="safe" placeholder="Safe text" aria-label="Safe text" autocomplete="off" spellcheck="false">
+      <button class="primary" aria-label="Add rule" title="Add rule">+</button>
+      <input name="selector" placeholder="CSS selector — everywhere if empty" aria-label="CSS selector" autocomplete="off" spellcheck="false">
+    </form>
+  </main>
+
+  <footer>Applies instantly on every tab. Reload a tab to bring its original text back.</footer>
+
+  <template id="rule-template">
+    <li>
+      <form class="rule" novalidate>
+        <input name="censored" placeholder="Censored text" aria-label="Censored text" autocomplete="off" spellcheck="false">
+        <span class="arrow" aria-hidden="true">→</span>
+        <input name="safe" placeholder="Nothing" aria-label="Safe text" autocomplete="off" spellcheck="false">
+        <button type="button" aria-label="Delete rule" title="Delete rule">×</button>
+        <input name="selector" placeholder="Everywhere" aria-label="CSS selector" autocomplete="off" spellcheck="false">
+      </form>
+    </li>
+  </template>
+</body>
+</html>
