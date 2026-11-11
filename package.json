@@ -1,0 +1,15 @@
+{
+  "name": "claude-censor",
+  "version": "1.0.0",
+  "description": "Chrome extension that replaces unwanted text on every page in real time.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/content/main.js src/content/shadow-hook.js --bundle --outdir=dist",
+    "watch": "npm run build -- --watch",
+    "test": "npm run build && node --test"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
