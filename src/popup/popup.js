@@ -1,5 +1,7 @@
 import { createPack } from '../shared/packs.js';
 import { loadSettings, saveSettings } from '../shared/settings.js';
+import { parsePacks, serializePacks } from '../shared/transfer.js';
+import { downloadJson } from './download.js';
 import { fillRule, mountFields, readRule, validateRule } from './rule-form.js';
 import { loadSession, saveSession } from './session.js';
 import { sortable } from './sortable.js';
@@ -8,6 +10,10 @@ const enabledToggle = document.getElementById('enabled');
 const packList = document.getElementById('packs');
 const packTemplate = document.getElementById('pack-template');
 const ruleTemplate = document.getElementById('rule-template');
+const importButton = document.getElementById('import');
+const fileInput = document.getElementById('file');
+const status = document.getElementById('status');
+const isPopup = new URLSearchParams(location.search).has('popup');
 
 const [{ enabled, packs }, session] = await Promise.all([loadSettings(), loadSession()]);
 let { draft } = session;
@@ -75,6 +81,9 @@ function createPackItem(pack) {
     savePacks();
   });
 
+  item.querySelector('[data-action="export"]').addEventListener('click', () => {
+    downloadJson(pack.name, serializePacks([pack]));
+  });
   item.querySelector('[data-action="delete"]').addEventListener('click', () => {
     const warning = `Delete “${pack.name}” and its ${count.textContent}?`;
     if (pack.rules.length && !confirm(warning)) return;
@@ -121,7 +130,7 @@ function addPack(pack) {
   return item;
 }
 
-document.body.classList.toggle('popup', new URLSearchParams(location.search).has('popup'));
+document.body.classList.toggle('popup', isPopup);
 document.addEventListener('input', ({ target }) => target.setCustomValidity(''));
 
 enabledToggle.checked = enabled;
@@ -137,6 +146,34 @@ document.getElementById('add-pack').addEventListener('click', () => {
   item.firstElementChild.open = true;
   item.querySelector('.rename').select();
 });
+
+document.getElementById('export').addEventListener('click', () => {
+  downloadJson('all packs', serializePacks(packs));
+});
+
+importButton.addEventListener('click', () => {
+  if (isPopup) chrome.tabs.create({ url: `${location.pathname}#import` });
+  else fileInput.click();
+});
+
+fileInput.addEventListener('change', async () => {
+  const [file] = fileInput.files;
+  fileInput.value = '';
+  if (!file) return;
+  try {
+    const imported = parsePacks(await file.text());
+    imported.forEach(addPack);
+    savePacks();
+    status.textContent = imported.length === 1 ? 'Imported 1 pack.' : `Imported ${imported.length} packs.`;
+  } catch (error) {
+    status.textContent = error.message;
+  }
+});
+
+if (location.hash === '#import') {
+  status.textContent = 'Choose a file to import.';
+  importButton.focus();
+}
 
 packList.append(...packs.map(createPackItem));
 sortable(packList, (from, to) => {

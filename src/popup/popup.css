@@ -145,7 +145,15 @@ details[open] .name::before {
 }
 
 .toolbar {
+  align-items: center;
   margin-top: 12px;
+}
+
+#status {
+  flex: 1;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
 }
 
 .rules {

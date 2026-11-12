@@ -19,6 +19,10 @@
 
     <div class="toolbar">
       <button id="add-pack" type="button">+ New pack</button>
+      <output id="status"></output>
+      <button id="import" type="button" title="Add packs from a JSON file">Import</button>
+      <button id="export" type="button" title="Save all packs to a JSON file">Export all</button>
+      <input id="file" type="file" accept=".json,application/json" hidden>
     </div>
   </main>
 
@@ -39,6 +43,7 @@
 
         <div class="pack-bar">
           <input class="rename" aria-label="Pack name" placeholder="Pack name" autocomplete="off" spellcheck="false">
+          <button type="button" data-action="export" title="Save this pack to a JSON file">Export</button>
           <button class="danger" type="button" data-action="delete">Delete</button>
         </div>
 
