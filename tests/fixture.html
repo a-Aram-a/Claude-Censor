@@ -136,10 +136,11 @@
       setTimeout(() => {
         const errors = [];
         addEventListener('error', (event) => errors.push(event.message));
-        delete chrome.runtime.id;
-        chrome.dom.openOrClosedShadowRoot = () => {
+        const invalidated = () => {
           throw new Error('Extension context invalidated.');
         };
+        Object.defineProperty(chrome, 'runtime', { get: invalidated });
+        chrome.dom.openOrClosedShadowRoot = invalidated;
         $('data').textContent = 'a bad word after reload';
         setTimeout(() => {
           actual.orphaned = [$('data').textContent, ...errors].join('|');

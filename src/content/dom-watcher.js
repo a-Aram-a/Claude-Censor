@@ -2,7 +2,13 @@ import { SHADOW_ATTACHED } from './shadow-event.js';
 
 const OBSERVED = { subtree: true, childList: true, characterData: true };
 
-const isOrphaned = () => !chrome.runtime?.id;
+function isOrphaned() {
+  try {
+    return !chrome.runtime?.id;
+  } catch {
+    return true;
+  }
+}
 
 const shadowRootOf = (node) =>
   node instanceof HTMLElement ? chrome.dom.openOrClosedShadowRoot(node) : null;
