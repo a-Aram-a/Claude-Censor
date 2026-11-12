@@ -35,6 +35,7 @@ const EXPECTED = {
   chain: 'gamma gamma ',
   order: 'omega final ',
   shrink: 'ab ',
+  orphaned: 'a bad word after reload',
   restored:
     'A bad word here, kept|bad word|tagged or tagged|a fofooo b|bad word and a secret|bad word',
 };

@@ -42,6 +42,7 @@ Invariants that are easy to break:
 - **Rule order semantics:** rules run top to bottom over enabled packs. A match is rejected if it includes any character written by a rule of the same or later rank. Empty replacements leave no span, which is what lets `fofooo` collapse fully under `foo → ""`.
 - **`main.js` calls `ledger.invalidate()` on every settings change.** Stale records are restored lazily by `ledger.refresh` the next time a node is scanned, so a reconfigure is always "restore, then re-apply from the original".
 - **`DomWatcher` discards its own mutations with `takeRecords()` after the handler runs**, and drains pending records before handling a shadow-attach event. Skipping either causes loops or lost page mutations.
+- **`DomWatcher` stops itself once `chrome.runtime.id` is gone.** Reloading or updating the extension orphans the content scripts in open tabs; every `chrome.*` call there throws "Extension context invalidated". Guard any new `chrome.*` call that runs after startup the same way.
 - **Matches are applied in reverse document order within a pass**, and `TextRun` is rebuilt after each pass. Segment offsets are only valid under that order.
 - **`collectWindow` context is capped** (`MAX_CONTEXT_NODES`, marked with a `ponytail:` comment). It is a deliberate ceiling, not a bug.
 - `shared/matcher.js`, `shared/packs.js` and `shared/transfer.js` stay free of DOM and `chrome` APIs so they run under `node --test`.
@@ -75,6 +76,7 @@ Invariants that are easy to break:
 - Attributes (`placeholder`, `alt`, `title`) and input values are not censored.
 - Text that a page copies out of already-censored DOM (for example `innerHTML +=`) has no ledger history, so self-containing rules apply to it again.
 - Rules cannot be dragged between packs; there is one new-rule draft shared by all packs; no per-rule enable switch.
+- After the extension is reloaded or updated, already-open tabs stay frozen (no censoring of new text, no restore) until the tab is reloaded; content scripts are not re-injected.
 - No homoglyph or Unicode-normalization matching.
 
 ## Keeping this file useful

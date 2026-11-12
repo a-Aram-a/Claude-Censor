@@ -31,6 +31,7 @@
     ],
   };
   window.chrome = {
+    runtime: { id: 'fixture' },
     storage: {
       local: { get: async (defaults) => ({ ...defaults, ...settings }) },
       onChanged: { addListener: (listener) => settingsListeners.push(listener) },
@@ -130,7 +131,21 @@
       actual.restored = [$('static'), $('tags'), $('tagged'), $('nested'), openRoot, closedRoot]
         .map((node) => node.textContent)
         .join('|');
-      $('results').textContent = btoa(encodeURIComponent(JSON.stringify(actual)));
+      settings.enabled = true;
+      settingsListeners.forEach((listener) => listener({}, 'local'));
+      setTimeout(() => {
+        const errors = [];
+        addEventListener('error', (event) => errors.push(event.message));
+        delete chrome.runtime.id;
+        chrome.dom.openOrClosedShadowRoot = () => {
+          throw new Error('Extension context invalidated.');
+        };
+        $('data').textContent = 'a bad word after reload';
+        setTimeout(() => {
+          actual.orphaned = [$('data').textContent, ...errors].join('|');
+          $('results').textContent = btoa(encodeURIComponent(JSON.stringify(actual)));
+        }, 20);
+      }, 20);
     }, 50);
   }, 100);
 </script>
