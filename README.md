@@ -13,7 +13,7 @@ Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked** 
 
 ## Rules
 
-Each rule is `(CSS selector, censored text, safe text)`. Every occurrence of the censored text inside elements matching the selector is replaced with the safe text. An empty selector means everywhere; an empty safe text removes the match.
+Each rule is `(censored text, safe text, CSS selector)`. Every occurrence of the censored text inside elements matching the selector is replaced with the safe text. An empty selector means everywhere; an empty safe text removes the match.
 
 Matching is:
 
@@ -21,7 +21,20 @@ Matching is:
 - **Whitespace-tolerant** — a space matches any run of spaces, NBSPs, tabs and line breaks.
 - **Markup-tolerant** — `b<b>a</b>d` and `b&ZeroWidthSpace;ad` both match `bad`.
 
-Scripts, styles, text areas and editable content are never touched. Only text nodes are edited; elements are left as they are.
+Selectors may use raw ids and classes such as `#:r1:`; they are escaped when needed.
+
+Scripts, styles, text areas and editable content are never touched. Only text nodes are edited; elements are left as they are. Turning censoring off, or changing the rules, restores the original text first.
+
+## Packs and order
+
+Rules are grouped into packs. Packs and the rules inside them can be enabled, disabled and reordered by dragging the handle or pressing ↑ ↓ on it.
+
+Rules run top to bottom across the enabled packs:
+
+- A later rule sees what earlier rules wrote, so `alpha → beta` followed by `beta → gamma` turns `alpha` into `gamma`.
+- A rule never rewrites its own output or the output of a later rule, so `Acme → Acme [client]` is applied exactly once.
+
+Packs can be exported to a JSON file, one at a time or all together, and imported back. Importing adds packs and never replaces existing ones; it opens in a tab because a file dialog closes the popup.
 
 ## Architecture
 
@@ -29,16 +42,24 @@ Scripts, styles, text areas and editable content are never touched. Only text no
 src/
   shared/
     matcher.js       rule → pattern and case-preserving replacement (pure)
+    packs.js         pack model, normalization of untrusted data
+    transfer.js      JSON export format
     settings.js      chrome.storage access
-    selector.js      selector validation
+    selector.js      selector validation and escaping
   content/
     main.js          wires settings to the watcher and the censor
     dom-watcher.js   reports changed nodes in the document and every shadow root
     text-window.js   gathers the text nodes around a changed node
     text-run.js      maps a match in joined text back onto its text nodes
+    edit-ledger.js   remembers what each rule wrote and the original text
     censor.js        applies the rules to changed nodes
     shadow-hook.js   page-world hook announcing new shadow roots
-  popup/             settings UI
+  popup/
+    popup.js         packs and rules UI
+    rule-form.js     rule fields: fill, read, validate
+    sortable.js      drag and keyboard reordering
+    session.js       draft and open pack, kept while the browser runs
+    download.js      file download
 ```
 
 ## Development
