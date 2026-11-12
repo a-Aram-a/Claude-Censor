@@ -13,17 +13,21 @@
   const settingsListeners = [];
   const settings = {
     enabled: true,
-    rules: [
+    packs: [
+      { name: 'Off', enabled: false, rules: [{ selector: '', censored: 'kept', safe: 'disabled' }] },
+      { name: 'Main', enabled: true, rules: [
       { selector: '', censored: 'bad word', safe: 'nice thing' },
       { selector: '.scoped, #also-scoped', censored: 'secret', safe: '[redacted]' },
       { selector: '*', censored: 'foo', safe: '' },
       { selector: ':::invalid', censored: 'kept', safe: 'broken' },
+      { selector: '#:Rk9kqlm:, .2col', censored: 'raw', safe: 'escaped' },
       { selector: '', censored: 'tagged', safe: 'tagged [x]' },
       { selector: '', censored: 'alpha', safe: 'beta' },
       { selector: '', censored: 'beta', safe: 'gamma' },
       { selector: '', censored: 'omega', safe: 'final' },
       { selector: '', censored: 'delta', safe: 'omega' },
       { selector: '', censored: 'ab', safe: 'a' },
+      ] },
     ],
   };
   window.chrome = {
@@ -59,6 +63,7 @@
 <p id="split"></p>
 <p id="data">fine</p>
 <p id="joined">ba<i>x</i>d word</p>
+<p id="raw"><span id=":Rk9kqlm:">raw</span> <span class="2col">raw</span> raw</p>
 <p id="tagged">tagged <b>and</b> tagged</p>
 <p id="chain">alpha beta</p>
 <p id="order">delta omega</p>
@@ -113,6 +118,7 @@
       split: $('split').textContent,
       data: $('data').textContent,
       joined: $('joined').textContent,
+      raw: $('raw').textContent,
       tagged: $('tagged').textContent,
       chain: $('chain').textContent,
       order: $('order').textContent,

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
   <title>Claude Censor</title>
   <link rel="stylesheet" href="popup.css">
   <script type="module" src="popup.js"></script>
@@ -9,36 +10,69 @@
 <body>
   <header>
     <h1>Claude Censor</h1>
-    <label class="switch" title="Enable or disable on all tabs">
-      <input id="enabled" type="checkbox" role="switch" aria-label="Enable censoring">
-      <span></span>
-    </label>
+    <button id="expand" class="ghost" type="button" title="Open in a tab">Open in tab ↗</button>
+    <input id="enabled" class="switch" type="checkbox" role="switch" aria-label="Enable censoring" title="Enable or disable on all tabs">
   </header>
 
   <main>
-    <ul id="rules" aria-label="Rules"></ul>
+    <ol id="packs" aria-label="Rule packs"></ol>
 
-    <form id="new-rule" class="rule" novalidate>
-      <input name="censored" placeholder="Censored text" aria-label="Censored text" autocomplete="off" spellcheck="false" autofocus>
-      <span class="arrow" aria-hidden="true">→</span>
-      <input name="safe" placeholder="Safe text" aria-label="Safe text" autocomplete="off" spellcheck="false">
-      <button class="primary" aria-label="Add rule" title="Add rule">+</button>
-      <input name="selector" placeholder="CSS selector — everywhere if empty" aria-label="CSS selector" autocomplete="off" spellcheck="false">
-    </form>
+    <div class="toolbar">
+      <button id="add-pack" type="button">+ New pack</button>
+    </div>
   </main>
 
-  <footer>Applies instantly on every tab. Turning it off brings the original text back.</footer>
+  <footer>
+    Rules run top to bottom across enabled packs, so a later rule sees what earlier ones wrote.
+    Drag ⠿ or focus it and press ↑ ↓ to reorder.
+  </footer>
+
+  <template id="pack-template">
+    <li class="pack" data-item>
+      <details name="packs">
+        <summary>
+          <button class="handle" type="button" draggable="true" aria-label="Reorder pack" title="Drag to reorder">⠿</button>
+          <span class="name"></span>
+          <span class="count"></span>
+          <input class="switch" type="checkbox" role="switch" aria-label="Enable pack" title="Enable or disable this pack">
+        </summary>
+
+        <div class="pack-bar">
+          <input class="rename" aria-label="Pack name" placeholder="Pack name" autocomplete="off" spellcheck="false">
+          <button class="danger" type="button" data-action="delete">Delete</button>
+        </div>
+
+        <ol class="rules" aria-label="Rules"></ol>
+
+        <form class="new-rule" novalidate>
+          <div class="fields"></div>
+          <button class="primary">Add rule</button>
+        </form>
+      </details>
+    </li>
+  </template>
 
   <template id="rule-template">
-    <li>
-      <form class="rule" novalidate>
-        <input name="censored" placeholder="Censored text" aria-label="Censored text" autocomplete="off" spellcheck="false">
-        <span class="arrow" aria-hidden="true">→</span>
-        <input name="safe" placeholder="Nothing" aria-label="Safe text" autocomplete="off" spellcheck="false">
-        <button type="button" aria-label="Delete rule" title="Delete rule">×</button>
-        <input name="selector" placeholder="Everywhere" aria-label="CSS selector" autocomplete="off" spellcheck="false">
-      </form>
+    <li class="rule" data-item>
+      <button class="handle" type="button" draggable="true" aria-label="Reorder rule" title="Drag to reorder">⠿</button>
+      <form class="fields" novalidate></form>
+      <button class="ghost danger" type="button" data-action="delete" aria-label="Delete rule" title="Delete rule">×</button>
     </li>
+  </template>
+
+  <template id="fields-template">
+    <label>
+      <span>Censor</span>
+      <input name="censored" placeholder="Text to hide" autocomplete="off" spellcheck="false">
+    </label>
+    <label>
+      <span>Replace with</span>
+      <input name="safe" placeholder="Nothing — the text is removed" autocomplete="off" spellcheck="false">
+    </label>
+    <label>
+      <span>Inside</span>
+      <input name="selector" placeholder="Everywhere — or a CSS selector" autocomplete="off" spellcheck="false">
+    </label>
   </template>
 </body>
 </html>

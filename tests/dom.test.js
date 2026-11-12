@@ -30,6 +30,7 @@ const EXPECTED = {
   split: 'nice thing',
   data: 'now a nice thing',
   joined: 'nice thing',
+  raw: 'escaped escaped raw',
   tagged: 'tagged [x] or tagged [x]',
   chain: 'gamma gamma ',
   order: 'omega final ',

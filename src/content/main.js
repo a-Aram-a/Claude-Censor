@@ -1,3 +1,4 @@
+import { activeRules } from '../shared/packs.js';
 import { loadSettings, onSettingsChanged } from '../shared/settings.js';
 import { Censor } from './censor.js';
 import { DomWatcher } from './dom-watcher.js';
@@ -6,8 +7,8 @@ import { EditLedger } from './edit-ledger.js';
 const ledger = new EditLedger();
 let watcher = null;
 
-function configure({ enabled, rules }) {
-  const censor = new Censor(enabled ? rules : [], ledger);
+function configure({ enabled, packs }) {
+  const censor = new Censor(enabled ? activeRules(packs) : [], ledger);
   const wasWatching = Boolean(watcher);
   watcher?.stop();
   watcher = null;
