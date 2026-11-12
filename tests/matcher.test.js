@@ -19,14 +19,14 @@ test('capitalizes a single uppercase letter instead of shouting', () => {
 });
 
 test('treats any whitespace run as a single space', () => {
-  assert.equal(censor('a bad  \n word!', 'bad word', 'x'), 'a x!');
+  assert.equal(censor('a bad\u00A0\u2003\n word!', 'bad word', 'x'), 'a x!');
   assert.equal(censor('badword', 'bad word', 'x'), 'badword');
-  assert.equal(censor('bad word', '  bad   word ', 'x'), 'x');
+  assert.equal(censor('bad word', '  bad \u00A0 word ', 'x'), 'x');
 });
 
 test('sees through invisible characters', () => {
-  assert.equal(censor('b​a­d﻿ w⁠ord', 'bad word', 'x'), 'x');
-  assert.equal(censor('bad', 'b​ad', 'x'), 'x');
+  assert.equal(censor('b\u200Ba\u00ADd\uFEFF w\u2060ord', 'bad word', 'x'), 'x');
+  assert.equal(censor('bad', 'b\u200Bad', 'x'), 'x');
 });
 
 test('escapes regular expression syntax', () => {
@@ -35,18 +35,17 @@ test('escapes regular expression syntax', () => {
 });
 
 test('handles astral characters', () => {
-  assert.equal(censor('so 😀​😀 much', '😀😀', ':)'), 'so :) much');
+  assert.equal(censor('so 😀\u200B😀 much', '😀😀', ':)'), 'so :) much');
 });
 
 test('rejects text with nothing to match', () => {
-  assert.equal(createPattern(' ​  '), null);
+  assert.equal(createPattern(' \u200B\u00A0 '), null);
   assert.equal(compileRule({ censored: '' }), null);
 });
 
 test('compiles a rule', () => {
-  const rule = compileRule({ selector: ' * ', censored: 'bad word', safe: 'x' });
-  assert.equal(rule.selector, '');
+  const rule = compileRule({ censored: 'bad word', safe: 'x' });
   assert.equal(rule.reach, 7);
   assert.equal(rule.replacementFor('BAD WORD'), 'X');
-  assert.equal(significantLength(' a​ b '), 2);
+  assert.equal(significantLength(' a\u200B b '), 2);
 });

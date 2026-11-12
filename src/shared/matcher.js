@@ -33,13 +33,10 @@ export function adaptCase(safe, found, censored) {
   return first === first.toLowerCase() ? safe : capitalize(safe);
 }
 
-export function compileRule({ selector = '', censored = '', safe = '' }) {
+export function compileRule({ censored = '', safe = '' }) {
   const pattern = createPattern(censored);
-  if (!pattern) return null;
-  const scope = selector.trim();
-  return {
+  return pattern && {
     pattern,
-    selector: scope === '*' ? '' : scope,
     reach: significantLength(censored),
     replacementFor: (found) => adaptCase(safe, found, censored),
   };

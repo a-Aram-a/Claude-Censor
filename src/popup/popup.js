@@ -1,5 +1,5 @@
 import { createPattern } from '../shared/matcher.js';
-import { isValidSelector } from '../shared/selector.js';
+import { resolveSelector } from '../shared/selector.js';
 import { loadSettings, saveSettings } from '../shared/settings.js';
 
 const enabledToggle = document.getElementById('enabled');
@@ -13,7 +13,7 @@ function validate(form) {
   const { censored, selector } = form.elements;
   censored.setCustomValidity(createPattern(censored.value) ? '' : 'Enter the text to censor.');
   selector.setCustomValidity(
-    isValidSelector(selector.value.trim() || '*') ? '' : 'This is not a valid CSS selector.',
+    resolveSelector(selector.value) === null ? 'This is not a valid CSS selector.' : '',
   );
   return form.reportValidity();
 }

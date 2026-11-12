@@ -1,5 +1,5 @@
 import { compileRule } from '../shared/matcher.js';
-import { isValidSelector } from '../shared/selector.js';
+import { resolveSelector } from '../shared/selector.js';
 import { TextRun } from './text-run.js';
 import { collectWindow } from './text-window.js';
 
@@ -20,9 +20,11 @@ export class Censor {
   #ledger;
 
   constructor(rules, ledger) {
-    this.#rules = rules
-      .map(compileRule)
-      .filter((rule) => rule && (!rule.selector || isValidSelector(rule.selector)));
+    this.#rules = rules.flatMap((rule) => {
+      const compiled = compileRule(rule);
+      const selector = resolveSelector(rule.selector ?? '');
+      return compiled && selector !== null ? [{ ...compiled, selector }] : [];
+    });
     this.#reach = Math.max(0, ...this.#rules.map((rule) => rule.reach));
     this.#ledger = ledger;
   }
