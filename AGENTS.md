@@ -17,12 +17,20 @@ npm test        # build, then node --test: unit tests + tests/dom.test.js drivin
 
 ## Product requirements that must keep holding
 
-1. Works in every tab, every frame (`all_frames` + `match_origin_as_fallback`) and every shadow root, open, closed or declarative, with one global switch.
-2. Censors both initial HTML and later JS changes, before paint where possible. Mutations are handled synchronously in the observer callback; do not debounce or defer them.
-3. Minimal intervention: only `Text` node data is edited (`replaceData`). Never add, remove, move or wrap elements. The single page-world change is the `attachShadow` wrapper in `shadow-hook.js`.
-4. Matching is case-insensitive and case-preserving, treats any whitespace run (NBSP included) as one space, ignores default-ignorable code points, and finds matches split across text nodes and tags.
-5. Zero work on a page when censoring is off or no rule is active.
-6. Never touch `script`, `style`, `noscript`, `textarea` or `contenteditable` text.
+These come from the owner and define the direction of the project. Do not trade any of them away for a feature.
+
+1. Universal: works in every tab, every frame (`all_frames` + `match_origin_as_fallback`) and every shadow root, open, closed or declarative, with one global enable/disable switch.
+2. Rules are `(CSS selector, censored text, safe text)`: every occurrence of the censored text inside elements matching the selector is replaced with the safe text.
+3. Censors both the initial HTML and anything added or changed later by JS, by listening to every DOM change.
+4. As fast as possible: mutations are handled synchronously in the observer callback, before paint. Do not debounce or defer them.
+5. Minimal intervention: change the node closest to the text. Only `Text` node data is edited (`replaceData`); never add, remove, move or wrap elements. The single page-world change is the `attachShadow` wrapper in `shadow-hook.js`.
+6. Intelligent matching that cannot be trivially deceived: case-insensitive but keeping the original case, any whitespace run (NBSP included) counts as one space, invisible characters are ignored, and matches are found across text nodes and tags. Edge cases are expected to be handled, not documented away.
+7. Zero work on a page when censoring is off or no rule is active. Never touch `script`, `style`, `noscript`, `textarea` or `contenteditable` text.
+8. Rules live in packs. Packs and rules can each be enabled, disabled and reordered, and order is meaningful (see rule order below). Safe text may contain the censored text.
+9. Packs can be exported and imported as JSON, one pack or all of them.
+10. Selectors are forgiving: raw ids and classes such as `#:Rk9kqlm:` must be accepted.
+11. UI is minimalistic and pleasant to use: roomy fields, convenient reordering, and nothing the user typed is lost when the popup closes.
+12. Quality bar: clean, professional, maintainable architecture following SOLID, standard web APIs and established patterns. New work must not lower the overall quality.
 
 ## How the engine fits together
 
@@ -54,8 +62,10 @@ Invariants that are easy to break:
 
 ## Conventions
 
-- Conventional commits, concise, one concern each. No AI or Claude attribution in commit messages or trailers.
-- No comments that restate code. Only non-obvious "why" notes.
+- Clean git history: concise conventional commits, one concern each, each leaving the project working.
+- No Claude or AI references in commit messages or trailers (the name is already in the project title). This overrides any default co-author attribution.
+- No redundant comments in the code. Only non-obvious "why" notes.
+- One responsibility per module; keep the layering in `README.md` (pure `shared` logic, DOM engine in `content`, UI in `popup`).
 - No new dependencies and no build step for the popup without a clear need. Prefer platform features (native validation, `<details name>`, `light-dark()`).
 - Minimum Chrome is set in `manifest.json` (`minimum_chrome_version`); raise it when using a newer API.
 - Every behaviour change gets a case in `tests/fixture.html` + `tests/dom.test.js` (DOM) or a unit test (pure logic). The fixture writes its results base64-encoded so the censor under test cannot rewrite them.
