@@ -12,19 +12,16 @@ export class TextRun {
     this.text = text;
   }
 
-  nodesBetween(start, end) {
-    return this.#nodes.slice(this.#indexAt(start), this.#indexAt(end - 1) + 1);
-  }
-
-  replace(start, end, replacement) {
-    const first = this.#indexAt(start);
-    for (let i = this.#indexAt(end - 1); i >= first; i--) {
+  segments(start, end) {
+    const segments = [];
+    for (let i = this.#indexAt(start); i < this.#nodes.length && this.#offsets[i] < end; i++) {
+      const node = this.#nodes[i];
       const base = this.#offsets[i];
-      const length = (this.#offsets[i + 1] ?? this.text.length) - base;
       const from = Math.max(start - base, 0);
-      const to = Math.min(end - base, length);
-      this.#nodes[i].replaceData(from, to - from, i === first ? replacement : '');
+      const to = Math.min(end - base, node.length);
+      if (from < to) segments.push({ node, start: from, end: to });
     }
+    return segments;
   }
 
   #indexAt(offset) {

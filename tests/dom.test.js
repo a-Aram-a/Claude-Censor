@@ -30,6 +30,12 @@ const EXPECTED = {
   split: 'nice thing',
   data: 'now a nice thing',
   joined: 'nice thing',
+  tagged: 'tagged [x] or tagged [x]',
+  chain: 'gamma gamma ',
+  order: 'omega final ',
+  shrink: 'ab ',
+  restored:
+    'A bad word here, kept|bad word|tagged or tagged|a fofooo b|bad word and a secret|bad word',
 };
 
 test('censors a live page', { skip: !existsSync(CHROME) && 'Chrome not found' }, () => {

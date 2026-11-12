@@ -10,12 +10,8 @@ const newRuleForm = document.getElementById('new-rule');
 let rules = [];
 
 function validate(form) {
-  const { censored, safe, selector } = form.elements;
-  const pattern = createPattern(censored.value);
-  censored.setCustomValidity(pattern ? '' : 'Enter the text to censor.');
-  safe.setCustomValidity(
-    pattern?.test(safe.value) ? 'Safe text must not contain the censored text.' : '',
-  );
+  const { censored, selector } = form.elements;
+  censored.setCustomValidity(createPattern(censored.value) ? '' : 'Enter the text to censor.');
   selector.setCustomValidity(
     isValidSelector(selector.value.trim() || '*') ? '' : 'This is not a valid CSS selector.',
   );

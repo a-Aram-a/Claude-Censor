@@ -10,6 +10,7 @@
     closedRoots.set(this, root);
     return root;
   };
+  const settingsListeners = [];
   const settings = {
     enabled: true,
     rules: [
@@ -17,12 +18,18 @@
       { selector: '.scoped, #also-scoped', censored: 'secret', safe: '[redacted]' },
       { selector: '*', censored: 'foo', safe: '' },
       { selector: ':::invalid', censored: 'kept', safe: 'broken' },
+      { selector: '', censored: 'tagged', safe: 'tagged [x]' },
+      { selector: '', censored: 'alpha', safe: 'beta' },
+      { selector: '', censored: 'beta', safe: 'gamma' },
+      { selector: '', censored: 'omega', safe: 'final' },
+      { selector: '', censored: 'delta', safe: 'omega' },
+      { selector: '', censored: 'ab', safe: 'a' },
     ],
   };
   window.chrome = {
     storage: {
       local: { get: async (defaults) => ({ ...defaults, ...settings }) },
-      onChanged: { addListener() {} },
+      onChanged: { addListener: (listener) => settingsListeners.push(listener) },
     },
     dom: { openOrClosedShadowRoot: (element) => closedRoots.get(element) ?? element.shadowRoot },
   };
@@ -52,6 +59,10 @@
 <p id="split"></p>
 <p id="data">fine</p>
 <p id="joined">ba<i>x</i>d word</p>
+<p id="tagged">tagged <b>and</b> tagged</p>
+<p id="chain">alpha beta</p>
+<p id="order">delta omega</p>
+<p id="shrink">abb</p>
 <pre id="results"></pre>
 <script>
   const $ = (id) => document.getElementById(id);
@@ -71,6 +82,12 @@
   }, 10);
   setTimeout(() => $('split').append('d wo'), 20);
   setTimeout(() => $('split').append('rd'), 30);
+  setTimeout(() => {
+    $('tagged').querySelector('b').textContent = 'or';
+    $('chain').append(' ');
+    $('order').append(' ');
+    $('shrink').append(' ');
+  }, 40);
 
   setTimeout(() => {
     const actual = {
@@ -96,8 +113,19 @@
       split: $('split').textContent,
       data: $('data').textContent,
       joined: $('joined').textContent,
+      tagged: $('tagged').textContent,
+      chain: $('chain').textContent,
+      order: $('order').textContent,
+      shrink: $('shrink').textContent,
     };
-    $('results').textContent = btoa(encodeURIComponent(JSON.stringify(actual)));
+    settings.enabled = false;
+    settingsListeners.forEach((listener) => listener({}, 'local'));
+    setTimeout(() => {
+      actual.restored = [$('static'), $('tags'), $('tagged'), $('nested'), openRoot, closedRoot]
+        .map((node) => node.textContent)
+        .join('|');
+      $('results').textContent = btoa(encodeURIComponent(JSON.stringify(actual)));
+    }, 50);
   }, 100);
 </script>
 </body>
