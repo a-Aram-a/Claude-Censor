@@ -21,6 +21,8 @@ let { draft } = session;
 const clone = (template) => template.content.firstElementChild.cloneNode(true);
 const move = (array, from, to) => array.splice(to, 0, ...array.splice(from, 1));
 const savePacks = () => saveSettings({ packs });
+const exportPacks = (name, exported) =>
+  downloadJson(name, serializePacks(exported, chrome.runtime.getManifest().version));
 const rememberOpenPack = () =>
   saveSession({ openPack: [...packList.children].findIndex((item) => item.firstElementChild.open) });
 
@@ -82,7 +84,7 @@ function createPackItem(pack) {
   });
 
   item.querySelector('[data-action="export"]').addEventListener('click', () => {
-    downloadJson(pack.name, serializePacks([pack]));
+    exportPacks(pack.name, [pack]);
   });
   item.querySelector('[data-action="delete"]').addEventListener('click', () => {
     const warning = `Delete “${pack.name}” and its ${count.textContent}?`;
@@ -148,7 +150,7 @@ document.getElementById('add-pack').addEventListener('click', () => {
 });
 
 document.getElementById('export').addEventListener('click', () => {
-  downloadJson('all packs', serializePacks(packs));
+  exportPacks('all packs', packs);
 });
 
 importButton.addEventListener('click', () => {

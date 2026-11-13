@@ -34,7 +34,7 @@ Rules run top to bottom across the enabled packs:
 - A later rule sees what earlier rules wrote, so `alpha → beta` followed by `beta → gamma` turns `alpha` into `gamma`.
 - A rule never rewrites its own output or the output of a later rule, so `Acme → Acme [client]` is applied exactly once.
 
-Packs can be exported to a JSON file, one at a time or all together, and imported back. Importing adds packs and never replaces existing ones; it opens in a tab because a file dialog closes the popup.
+Packs can be exported to a JSON file, one at a time or all together, and imported back. Importing adds packs and never replaces existing ones; it opens in a tab because a file dialog closes the popup. Files carry a format version, so a file from a newer, incompatible release is refused with a message instead of being misread.
 
 ## Architecture
 
@@ -43,6 +43,7 @@ src/
   shared/
     matcher.js       rule → pattern and case-preserving replacement (pure)
     packs.js         pack model, normalization of untrusted data
+    schema.js        data version and upgrades for storage and export files
     transfer.js      JSON export format
     settings.js      chrome.storage access
     selector.js      selector validation and escaping

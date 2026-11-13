@@ -45,14 +45,18 @@ Invariants that are easy to break:
 - **`DomWatcher` stops itself once `chrome.runtime.id` is gone.** Reloading or updating the extension orphans the content scripts in open tabs; every `chrome.*` call there throws "Extension context invalidated", and so can merely reading `chrome.runtime`, which is why `isOrphaned` uses try/catch. Guard any new `chrome.*` call that runs after startup with it.
 - **Matches are applied in reverse document order within a pass**, and `TextRun` is rebuilt after each pass. Segment offsets are only valid under that order.
 - **`collectWindow` context is capped** (`MAX_CONTEXT_NODES`, marked with a `ponytail:` comment). It is a deliberate ceiling, not a bug.
-- `shared/matcher.js`, `shared/packs.js` and `shared/transfer.js` stay free of DOM and `chrome` APIs so they run under `node --test`.
+- `shared/matcher.js`, `shared/packs.js`, `shared/schema.js` and `shared/transfer.js` stay free of DOM and `chrome` APIs so they run under `node --test`.
 
 ## Data
 
-- `chrome.storage.local`: `{ enabled, packs: [{ name, enabled, rules: [{ censored, safe, selector }] }] }`. A legacy flat `rules` key is still read as a pack named "My rules" in `shared/settings.js`.
+- `chrome.storage.local`: `{ enabled, version, packs: [{ name, enabled, rules: [{ censored, safe, selector }] }] }`. A legacy flat `rules` key is still read as a pack named "My rules" in `shared/settings.js`.
 - `chrome.storage.session`: popup-only state (`draft`, `openPack`). Keep popup state out of `local`, because every `local` write reconfigures every tab.
 - Anything read from storage or an imported file passes through `normalizePacks`. Keep it the only trust boundary.
-- Export format: `{ format: "claude-censor", version: 1, packs }`. Bump `version` and keep reading old files if the shape changes.
+- Export format: `{ format: "claude-censor", version, extension, packs }`. `extension` is the manifest version that wrote the file, for diagnostics only; never branch on it.
+- **One data version (`SCHEMA_VERSION` in `shared/schema.js`, `"major.minor"`) covers both storage and export files**, and both are read through `upgrade()`. Missing means 1.
+  - Additive change that old readers may safely drop (a new optional field): bump the minor, give it a default in `normalizePacks`.
+  - Anything an old reader would misread: bump the major and add `UPGRADES[oldMajor]`, a function turning data of that major into the next one. Never edit or remove a shipped upgrade; old files and old storage must keep loading.
+  - Data from a newer major is refused (import shows the message; storage load throws rather than overwrite it).
 
 ## Popup
 
