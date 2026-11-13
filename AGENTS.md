@@ -26,7 +26,7 @@ These come from the owner and define the direction of the project. Do not trade 
 5. Minimal intervention: change the node closest to the text. Only `Text` node data is edited (`replaceData`); never add, remove, move or wrap elements. The single page-world change is the `attachShadow` wrapper in `shadow-hook.js`.
 6. Intelligent matching that cannot be trivially deceived: case-insensitive but keeping the original case, any whitespace run (NBSP included) counts as one space, invisible characters are ignored, and matches are found across text nodes and tags. Edge cases are expected to be handled, not documented away.
 7. Zero work on a page when censoring is off or no rule is active. Never touch `script`, `style`, `noscript`, `textarea` or `contenteditable` text.
-8. Rules live in packs. Packs and rules can each be enabled, disabled and reordered, and order is meaningful (see rule order below). Safe text may contain the censored text.
+8. Rules live in packs. Packs can be enabled and disabled; packs and rules can be reordered and duplicated, and order is meaningful (see rule order below). A duplicated pack starts disabled so two identical packs never run at once. Safe text may contain the censored text.
 9. Packs can be exported and imported as JSON, one pack or all of them.
 10. Selectors are forgiving: raw ids and classes such as `#:Rk9kqlm:` must be accepted.
 11. UI is minimalistic and pleasant to use: roomy fields, convenient reordering, and nothing the user typed is lost when the popup closes.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { activeRules, normalizePacks } from '../src/shared/packs.js';
+import { activeRules, clonePack, normalizePacks } from '../src/shared/packs.js';
 
 test('normalizes untrusted packs', () => {
   const packs = normalizePacks([
@@ -13,6 +13,14 @@ test('normalizes untrusted packs', () => {
     { name: 'Off', enabled: false, rules: [] },
   ]);
   assert.deepEqual(normalizePacks('junk'), []);
+});
+
+test('clones a pack switched off and independent of the original', () => {
+  const pack = { name: 'Work', enabled: true, rules: [{ censored: 'a', safe: 'b', selector: '' }] };
+  const copy = clonePack(pack);
+  copy.rules[0].safe = 'c';
+  assert.deepEqual(copy, { name: 'Work copy', enabled: false, rules: [{ censored: 'a', safe: 'c', selector: '' }] });
+  assert.equal(pack.rules[0].safe, 'b');
 });
 
 test('flattens enabled packs in order', () => {

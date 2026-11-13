@@ -43,6 +43,7 @@
 
         <div class="pack-bar">
           <input class="rename" aria-label="Pack name" placeholder="Pack name" autocomplete="off" spellcheck="false">
+          <button type="button" data-action="duplicate" title="Add a copy of this pack, switched off">Duplicate</button>
           <button type="button" data-action="export" title="Save this pack to a JSON file">Export</button>
           <button class="danger" type="button" data-action="delete">Delete</button>
         </div>
@@ -61,7 +62,15 @@
     <li class="rule" data-item>
       <button class="handle" type="button" draggable="true" aria-label="Reorder rule" title="Drag to reorder">⠿</button>
       <form class="fields" novalidate></form>
-      <button class="ghost danger" type="button" data-action="delete" aria-label="Delete rule" title="Delete rule">×</button>
+      <div class="rule-actions">
+        <button class="ghost danger" type="button" data-action="delete" aria-label="Delete rule" title="Delete rule">×</button>
+        <button class="ghost" type="button" data-action="duplicate" aria-label="Duplicate rule" title="Duplicate rule">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/>
+            <path d="M10.5 3v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1H3"/>
+          </svg>
+        </button>
+      </div>
     </li>
   </template>
 

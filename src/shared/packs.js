@@ -8,6 +8,12 @@ const normalizeRule = (rule) => ({
 
 export const createPack = (name = 'New pack') => ({ name, enabled: true, rules: [] });
 
+export const clonePack = (pack) => ({
+  name: `${pack.name} copy`,
+  enabled: false,
+  rules: pack.rules.map((rule) => ({ ...rule })),
+});
+
 export function normalizePacks(value) {
   if (!Array.isArray(value)) return [];
   return value

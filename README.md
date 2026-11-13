@@ -27,7 +27,7 @@ Scripts, styles, text areas and editable content are never touched. Only text no
 
 ## Packs and order
 
-Rules are grouped into packs. Packs and the rules inside them can be enabled, disabled and reordered by dragging the handle or pressing ↑ ↓ on it.
+Rules are grouped into packs. Packs and the rules inside them can be enabled, disabled and reordered by dragging the handle or pressing ↑ ↓ on it. Both can be duplicated: a rule copy appears right below the original, and a pack copy starts switched off so it changes nothing until it has been edited.
 
 Rules run top to bottom across the enabled packs:
 

@@ -1,4 +1,4 @@
-import { createPack } from '../shared/packs.js';
+import { clonePack, createPack } from '../shared/packs.js';
 import { loadSettings, saveSettings } from '../shared/settings.js';
 import { parsePacks, serializePacks } from '../shared/transfer.js';
 import { downloadJson } from './download.js';
@@ -31,7 +31,7 @@ function setDraft(rule) {
   saveSession({ draft });
 }
 
-function createRuleItem(pack, rule, onRemoved) {
+function createRuleItem(pack, rule, onCountChanged) {
   const item = clone(ruleTemplate);
   const form = item.querySelector('form');
   mountFields(form);
@@ -46,7 +46,16 @@ function createRuleItem(pack, rule, onRemoved) {
     pack.rules.splice(pack.rules.indexOf(rule), 1);
     item.remove();
     savePacks();
-    onRemoved();
+    onCountChanged();
+  });
+  item.querySelector('[data-action="duplicate"]').addEventListener('click', () => {
+    const copy = { ...rule };
+    const copyItem = createRuleItem(pack, copy, onCountChanged);
+    pack.rules.splice(pack.rules.indexOf(rule) + 1, 0, copy);
+    item.after(copyItem);
+    savePacks();
+    onCountChanged();
+    copyItem.querySelector('[name="censored"]').select();
   });
   return item;
 }
@@ -85,6 +94,10 @@ function createPackItem(pack) {
 
   item.querySelector('[data-action="export"]').addEventListener('click', () => {
     exportPacks(pack.name, [pack]);
+  });
+  item.querySelector('[data-action="duplicate"]').addEventListener('click', () => {
+    reveal(addPack(clonePack(pack), packs.indexOf(pack) + 1));
+    savePacks();
   });
   item.querySelector('[data-action="delete"]').addEventListener('click', () => {
     const warning = `Delete “${pack.name}” and its ${count.textContent}?`;
@@ -125,11 +138,16 @@ function createPackItem(pack) {
   return item;
 }
 
-function addPack(pack) {
-  packs.push(pack);
+function addPack(pack, index = packs.length) {
+  packs.splice(index, 0, pack);
   const item = createPackItem(pack);
-  packList.append(item);
+  packList.insertBefore(item, packList.children[index] ?? null);
   return item;
+}
+
+function reveal(item) {
+  item.firstElementChild.open = true;
+  item.querySelector('.rename').select();
 }
 
 document.body.classList.toggle('popup', isPopup);
@@ -143,10 +161,8 @@ document.getElementById('expand').addEventListener('click', () => {
 });
 
 document.getElementById('add-pack').addEventListener('click', () => {
-  const item = addPack(createPack());
+  reveal(addPack(createPack()));
   savePacks();
-  item.firstElementChild.open = true;
-  item.querySelector('.rename').select();
 });
 
 document.getElementById('export').addEventListener('click', () => {
