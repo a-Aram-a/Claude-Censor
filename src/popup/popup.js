@@ -4,7 +4,7 @@ import { parsePacks, serializePacks } from '../shared/transfer.js';
 import { downloadJson } from './download.js';
 import { fillRule, mountFields, readRule, validateRule } from './rule-form.js';
 import { loadSession, saveSession } from './session.js';
-import { sortable } from './sortable.js';
+import { dropZone, sortable } from './sortable.js';
 
 const enabledToggle = document.getElementById('enabled');
 const packList = document.getElementById('packs');
@@ -23,8 +23,9 @@ const move = (array, from, to) => array.splice(to, 0, ...array.splice(from, 1));
 const savePacks = () => saveSettings({ packs });
 const exportPacks = (name, exported) =>
   downloadJson(name, serializePacks(exported, chrome.runtime.getManifest().version));
-const rememberOpenPack = () =>
-  saveSession({ openPack: [...packList.children].findIndex((item) => item.firstElementChild.open) });
+const openPackIndex = () => [...packList.children].findIndex((item) => item.firstElementChild.open);
+const rememberOpenPack = () => saveSession({ openPack: openPackIndex() });
+const ruleOwners = new WeakMap();
 
 function setDraft(rule) {
   draft = rule;
@@ -36,6 +37,7 @@ function createRuleItem(pack, rule, onCountChanged) {
   const form = item.querySelector('form');
   mountFields(form);
   fillRule(form, rule);
+  ruleOwners.set(item, { pack, rule });
 
   form.addEventListener('change', () => {
     if (!validateRule(form)) return;
@@ -114,6 +116,19 @@ function createPackItem(pack) {
     savePacks();
   });
 
+  dropZone(
+    item,
+    (dragged) => ruleOwners.has(dragged) && ruleOwners.get(dragged).pack !== pack,
+    (dragged) => {
+      const { pack: source, rule } = ruleOwners.get(dragged);
+      source.rules.splice(source.rules.indexOf(rule), 1);
+      pack.rules.push(rule);
+      savePacks();
+      render(openPackIndex());
+      status.textContent = `Moved to “${pack.name}”.`;
+    },
+  );
+
   mountFields(newRule.querySelector('.fields'));
   newRule.addEventListener('input', () => setDraft(readRule(newRule)));
   newRule.addEventListener('submit', (event) => {
@@ -143,6 +158,12 @@ function addPack(pack, index = packs.length) {
   const item = createPackItem(pack);
   packList.insertBefore(item, packList.children[index] ?? null);
   return item;
+}
+
+function render(openPack) {
+  packList.replaceChildren(...packs.map(createPackItem));
+  const item = packList.children[openPack];
+  if (item) item.firstElementChild.open = true;
 }
 
 function reveal(item) {
@@ -193,12 +214,9 @@ if (location.hash === '#import') {
   importButton.focus();
 }
 
-packList.append(...packs.map(createPackItem));
+render(session.openPack);
 sortable(packList, (from, to) => {
   move(packs, from, to);
   savePacks();
   rememberOpenPack();
 });
-
-const openItem = packList.children[session.openPack];
-if (openItem) openItem.firstElementChild.open = true;

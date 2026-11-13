@@ -27,7 +27,7 @@ Scripts, styles, text areas and editable content are never touched. Only text no
 
 ## Packs and order
 
-Rules are grouped into packs. Packs and the rules inside them can be enabled, disabled and reordered by dragging the handle or pressing ↑ ↓ on it. Both can be duplicated: a rule copy appears right below the original, and a pack copy starts switched off so it changes nothing until it has been edited.
+Rules are grouped into packs. Packs and the rules inside them can be enabled, disabled and reordered by dragging the handle or pressing ↑ ↓ on it. A rule dropped on another pack moves to the end of that pack. Both can be duplicated: a rule copy appears right below the original, and a pack copy starts switched off so it changes nothing until it has been edited.
 
 Rules run top to bottom across the enabled packs:
 
@@ -58,7 +58,7 @@ src/
   popup/
     popup.js         packs and rules UI
     rule-form.js     rule fields: fill, read, validate
-    sortable.js      drag and keyboard reordering
+    sortable.js      drag and keyboard reordering, drop zones
     session.js       draft and open pack, kept while the browser runs
     download.js      file download
 ```
