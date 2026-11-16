@@ -20,7 +20,7 @@ npm test        # build, then node --test: unit tests + tests/dom.test.js drivin
 These come from the owner and define the direction of the project. Do not trade any of them away for a feature.
 
 1. Universal: works in every tab, every frame (`all_frames` + `match_origin_as_fallback`) and every shadow root, open, closed or declarative, with one global enable/disable switch.
-2. Rules are `(CSS selector, censored text, safe text)`: every occurrence of the censored text inside elements matching the selector is replaced with the safe text.
+2. Rules are `(CSS selector, censored text, safe text)`: every occurrence of the censored text inside elements matching the selector is replaced with the safe text. The censored text is plain by default or, per rule, a full JavaScript regular expression.
 3. Censors both the initial HTML and anything added or changed later by JS, by listening to every DOM change.
 4. As fast as possible: mutations are handled synchronously in the observer callback, before paint. Do not debounce or defer them.
 5. Minimal intervention: change the node closest to the text. Only `Text` node data is edited (`replaceData`); never add, remove, move or wrap elements. The single page-world change is the `attachShadow` wrapper in `shadow-hook.js`.
@@ -44,18 +44,21 @@ Invariants that are easy to break:
 - **`DomWatcher` discards its own mutations with `takeRecords()` after the handler runs**, and drains pending records before handling a shadow-attach event. Skipping either causes loops or lost page mutations.
 - **`DomWatcher` stops itself once `chrome.runtime.id` is gone.** Reloading or updating the extension orphans the content scripts in open tabs; every `chrome.*` call there throws "Extension context invalidated", and so can merely reading `chrome.runtime`, which is why `isOrphaned` uses try/catch. Guard any new `chrome.*` call that runs after startup with it.
 - **Matches are applied in reverse document order within a pass**, and `TextRun` is rebuilt after each pass. Segment offsets are only valid under that order.
+- **Regex rules are `isolated`; plain rules are not.** A plain rule matches over the whole window and is filtered by scope afterwards. A regex rule runs once per subject: consecutive window nodes sharing the nearest selector-matching element (the root when there is no selector), with ignorable characters stripped and mapped back by `stripIgnorables`. That is what gives `^`, `$` and `.+` a meaning. Empty matches are dropped (they would never terminate), and so is any match touching a truncated window edge (`openStart`/`openEnd`), so the result does not depend on which mutation triggered the scan.
+- **A regex is parsed only by `createRegex`** (bare source means flags `i`, `/source/flags` is taken literally, `g` always, `u` when it compiles). The popup validates with the same function the engine compiles with.
 - **`collectWindow` context is capped** (`MAX_CONTEXT_NODES`, marked with a `ponytail:` comment). It is a deliberate ceiling, not a bug.
 - `shared/matcher.js`, `shared/packs.js`, `shared/schema.js` and `shared/transfer.js` stay free of DOM and `chrome` APIs so they run under `node --test`.
 
 ## Data
 
-- `chrome.storage.local`: `{ enabled, version, packs: [{ name, enabled, rules: [{ censored, safe, selector }] }] }`. A legacy flat `rules` key is still read as a pack named "My rules" in `shared/settings.js`.
+- `chrome.storage.local`: `{ enabled, version, packs: [{ name, enabled, rules: [{ censored, safe, selector, regex }] }] }`. `censored` is trimmed unless `regex` is true. A legacy flat `rules` key is still read as a pack named "My rules" in `shared/settings.js`.
 - `chrome.storage.session`: popup-only state (`draft`, `openPack`). Keep popup state out of `local`, because every `local` write reconfigures every tab.
 - Anything read from storage or an imported file passes through `normalizePacks`. Keep it the only trust boundary.
 - Export format: `{ format: "claude-censor", version, extension, packs }`. `extension` is the manifest version that wrote the file, for diagnostics only; never branch on it.
 - **One data version (`SCHEMA_VERSION` in `shared/schema.js`, `"major.minor"`) covers both storage and export files**, and both are read through `upgrade()`. Missing means 1.
   - Additive change that old readers may safely drop (a new optional field): bump the minor, give it a default in `normalizePacks`.
   - Anything an old reader would misread: bump the major and add `UPGRADES[oldMajor]`, a function turning data of that major into the next one. Never edit or remove a shipped upgrade; old files and old storage must keep loading.
+  - The owner keeps the version at 1.0 until the first public release; additive fields added before then (such as `regex`) do not bump it.
   - Data from a newer major is refused (import shows the message; storage load throws rather than overwrite it).
 
 ## Popup
@@ -82,6 +85,7 @@ Invariants that are easy to break:
 - Text that a page copies out of already-censored DOM (for example `innerHTML +=`) has no ledger history, so self-containing rules apply to it again.
 - A rule dropped on another pack always lands at its end, and there is no keyboard way to move a rule between packs; there is one new-rule draft shared by all packs; no per-rule enable switch.
 - After the extension is reloaded or updated, already-open tabs stay frozen (no censoring of new text, no restore) until the tab is reloaded; content scripts are not re-injected.
+- Regex rules: a match longer than `PATTERN_REACH` characters around a change is missed; a pattern with catastrophic backtracking blocks the page (no timeout is possible in a content script); without a selector, adjacent elements with no whitespace between them read as one word; text appended next to a rule's own output is not merged into that match.
 - No homoglyph or Unicode-normalization matching.
 
 ## Keeping this file useful

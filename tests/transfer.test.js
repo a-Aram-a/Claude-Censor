@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { parsePacks, serializePacks } from '../src/shared/transfer.js';
 
 const packs = [
-  { name: 'Work', enabled: false, rules: [{ censored: 'a', safe: 'a [x]', selector: '#:r1:' }] },
+  { name: 'Work', enabled: false, rules: [{ censored: 'a', safe: 'a [x]', selector: '#:r1:', regex: false }] },
 ];
 const file = (fields) => JSON.stringify({ format: 'claude-censor', packs, ...fields });
 

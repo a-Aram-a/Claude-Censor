@@ -27,6 +27,12 @@
       { selector: '', censored: 'omega', safe: 'final' },
       { selector: '', censored: 'delta', safe: 'omega' },
       { selector: '', censored: 'ab', safe: 'a' },
+      { regex: true, selector: '', censored: '(\\d{4}) (\\d{4})', safe: '$2-$1' },
+      { regex: true, selector: '', censored: '/Mr\\. (\\w+)/', safe: 'Mr. X' },
+      { regex: true, selector: '.cell', censored: '^.+$', safe: 'hidden' },
+      { regex: true, selector: '#rx-empty', censored: 'z*', safe: '-' },
+      { regex: true, selector: '', censored: '(', safe: 'broken' },
+      { regex: true, selector: '', censored: '^edge\\d', safe: 'EDGE' },
       ] },
     ],
   };
@@ -69,6 +75,12 @@
 <p id="chain">alpha beta</p>
 <p id="order">delta omega</p>
 <p id="shrink">abb</p>
+<p id="rx-groups">card 12<b>34</b> 56&#8203;78 end</p>
+<p id="rx-case">Mr. Fox and mr. fox</p>
+<p id="rx-scope"><span class="cell">one two</span><span class="cell">three</span> four</p>
+<p id="rx-empty">azzb</p>
+<p id="rx-dynamic"></p>
+<p id="rx-edge"></p>
 <pre id="results"></pre>
 <script>
   const $ = (id) => document.getElementById(id);
@@ -77,6 +89,7 @@
   const closedHost = document.createElement('div');
   const closedRoot = closedHost.attachShadow({ mode: 'closed' });
   closedRoot.innerHTML = '<p>bad <b>word</b></p>';
+  $('rx-edge').append(`edge1 ${'pad '.repeat(400)}`, 'x');
 
   setTimeout(() => {
     openRoot.innerHTML = '<p>bad word and a secret</p>';
@@ -85,6 +98,8 @@
     $('split').append('ba');
     $('data').firstChild.data = 'now a bad word';
     $('joined').querySelector('i').remove();
+    $('rx-dynamic').innerHTML = '<span class="cell">late</span>';
+    $('rx-edge').lastChild.data = 'y';
   }, 10);
   setTimeout(() => $('split').append('d wo'), 20);
   setTimeout(() => $('split').append('rd'), 30);
@@ -124,11 +139,17 @@
       chain: $('chain').textContent,
       order: $('order').textContent,
       shrink: $('shrink').textContent,
+      rxGroups: $('rx-groups').textContent,
+      rxCase: $('rx-case').textContent,
+      rxScope: $('rx-scope').textContent,
+      rxEmpty: $('rx-empty').textContent,
+      rxDynamic: $('rx-dynamic').textContent,
+      rxEdge: $('rx-edge').textContent.slice(0, 5),
     };
     settings.enabled = false;
     settingsListeners.forEach((listener) => listener({}, 'local'));
     setTimeout(() => {
-      actual.restored = [$('static'), $('tags'), $('tagged'), $('nested'), openRoot, closedRoot]
+      actual.restored = [$('static'), $('tags'), $('tagged'), $('nested'), openRoot, closedRoot, $('rx-groups')]
         .map((node) => node.textContent)
         .join('|');
       settings.enabled = true;

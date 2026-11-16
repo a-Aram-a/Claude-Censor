@@ -35,9 +35,15 @@ const EXPECTED = {
   chain: 'gamma gamma ',
   order: 'omega final ',
   shrink: 'ab ',
+  rxGroups: 'card 5678-1234 end',
+  rxCase: 'Mr. X and mr. fox',
+  rxScope: 'hiddenhidden four',
+  rxEmpty: 'a-b',
+  rxDynamic: 'hidden',
+  rxEdge: 'edge1',
   orphaned: 'a bad word after reload',
   restored:
-    'A bad word here, kept|bad word|tagged or tagged|a fofooo b|bad word and a secret|bad word',
+    'A bad word here, kept|bad word|tagged or tagged|a fofooo b|bad word and a secret|bad word|card 1234 56\u200B78 end',
 };
 
 test('censors a live page', { skip: !existsSync(CHROME) && 'Chrome not found' }, () => {

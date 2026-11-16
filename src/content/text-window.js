@@ -14,14 +14,15 @@ function collectContext(walker, origin, reach) {
     before.push(walker.currentNode);
     need -= significantLength(walker.currentNode.data);
   }
-  return before.reverse();
+  return { before: before.reverse(), openStart: Boolean(walker.previousNode()) };
 }
 
 export function collectWindow(origin, reach) {
   const walker = document.createTreeWalker(origin.getRootNode(), NodeFilter.SHOW_TEXT, filter);
-  const before = collectContext(walker, origin, reach);
+  const { before, openStart } = collectContext(walker, origin, reach);
   const core = origin.nodeType === Node.TEXT_NODE && isCensorable(origin) ? [origin] : [];
   const after = [];
+  let openEnd = false;
 
   walker.currentNode = origin;
   for (let need = reach; walker.nextNode(); ) {
@@ -30,10 +31,13 @@ export function collectWindow(origin, reach) {
       core.push(node);
       continue;
     }
-    if (need <= 0 || after.length >= MAX_CONTEXT_NODES) break;
+    if (need <= 0 || after.length >= MAX_CONTEXT_NODES) {
+      openEnd = true;
+      break;
+    }
     after.push(node);
     need -= significantLength(node.data);
   }
 
-  return { core, nodes: [...before, ...core, ...after] };
+  return { core, nodes: [...before, ...core, ...after], openStart, openEnd };
 }

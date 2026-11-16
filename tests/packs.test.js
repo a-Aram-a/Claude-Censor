@@ -5,11 +5,15 @@ import { activeRules, clonePack, normalizePacks } from '../src/shared/packs.js';
 test('normalizes untrusted packs', () => {
   const packs = normalizePacks([
     null,
-    { name: '  ', rules: [{ censored: ' a ', safe: 1 }, { censored: '' }, 'junk'] },
+    { name: '  ', rules: [{ censored: ' a ', safe: 1 }, { censored: ' a ', regex: true }, { censored: '' }, 'junk'] },
     { name: 'Off', enabled: false, rules: 'junk' },
   ]);
   assert.deepEqual(packs, [
-    { name: 'Untitled pack', enabled: true, rules: [{ censored: 'a', safe: '', selector: '' }] },
+    { name: 'Untitled pack', enabled: true, rules: [
+        { censored: 'a', safe: '', selector: '', regex: false },
+        { censored: ' a ', safe: '', selector: '', regex: true },
+      ],
+    },
     { name: 'Off', enabled: false, rules: [] },
   ]);
   assert.deepEqual(normalizePacks('junk'), []);

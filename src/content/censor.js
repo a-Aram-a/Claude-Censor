@@ -1,18 +1,47 @@
-import { compileRule } from '../shared/matcher.js';
+import { compileRule, stripIgnorables } from '../shared/matcher.js';
 import { resolveSelector } from '../shared/selector.js';
 import { TextRun } from './text-run.js';
 import { collectWindow } from './text-window.js';
 
-function isWithin(node, selector) {
+function scopeOf(node, selector) {
+  if (node.parentElement?.isContentEditable) return null;
+  if (!selector) return node.getRootNode();
   for (let current = node; current; current = current.getRootNode().host) {
     const element = current.nodeType === Node.ELEMENT_NODE ? current : current.parentElement;
-    if (element?.closest(selector)) return true;
+    const scope = element?.closest(selector);
+    if (scope) return scope;
   }
-  return false;
+  return null;
 }
 
-const isInScope = (node, { selector }) =>
-  !node.parentElement?.isContentEditable && (!selector || isWithin(node, selector));
+const wholeSubject = (nodes) => {
+  const run = new TextRun(nodes);
+  return { text: run.text, segments: (start, end) => run.segments(start, end) };
+};
+
+function isolatedSubjects({ nodes, openStart, openEnd }, selector) {
+  const groups = [];
+  let previous = null;
+  nodes.forEach((node) => {
+    const scope = scopeOf(node, selector);
+    if (scope && scope === previous) groups.at(-1).push(node);
+    else if (scope) groups.push([node]);
+    previous = scope;
+  });
+  return groups.map((group) => {
+    const run = new TextRun(group);
+    const { text, toRaw } = stripIgnorables(run.text);
+    return {
+      text,
+      segments: (start, end) => run.segments(...toRaw(start, end)),
+      openStart: openStart && group[0] === nodes[0],
+      openEnd: openEnd && group.at(-1) === nodes.at(-1),
+    };
+  });
+}
+
+const isCutOff = ({ text, openStart, openEnd }, { 0: found, index }) =>
+  (openStart && index === 0) || (openEnd && index + found.length === text.length);
 
 export class Censor {
   #rules;
@@ -37,41 +66,47 @@ export class Censor {
     const censored = new Set();
     for (const origin of origins) {
       if (!origin.isConnected) continue;
-      const { core, nodes } = collectWindow(origin, this.#reach);
+      const window = collectWindow(origin, this.#reach);
+      const { core } = window;
       if (core.length && core.every((node) => censored.has(node))) continue;
       core.forEach((node) => censored.add(node));
-      this.#apply(nodes);
+      this.#apply(window);
     }
   }
 
-  #apply(nodes) {
+  #apply(window) {
+    const { nodes } = window;
     nodes.forEach((node) => this.#ledger.refresh(node));
-    let run = new TextRun(nodes);
+    let whole = null;
 
     this.#rules.forEach((rule, rank) => {
       for (;;) {
-        const matches = this.#matches(run, rule, rank);
+        const subjects = rule.isolated
+          ? isolatedSubjects(window, rule.selector)
+          : [(whole ??= wholeSubject(nodes))];
+        const matches = subjects.flatMap((subject) => this.#matches(subject, rule, rank));
         if (!matches.length) break;
         for (const { segments, replacement } of matches.reverse()) {
           segments.forEach(({ node, start, end }, index) =>
             this.#ledger.replace(node, start, end, index ? '' : replacement, rank),
           );
         }
-        run = new TextRun(nodes);
+        whole = null;
       }
     });
   }
 
-  #matches(run, rule, rank) {
-    return [...run.text.matchAll(rule.pattern)]
-      .map(({ 0: found, index }) => ({
-        segments: run.segments(index, index + found.length),
-        replacement: rule.replacementFor(found),
+  #matches(subject, rule, rank) {
+    return [...subject.text.matchAll(rule.pattern)]
+      .filter((match) => match[0] && !isCutOff(subject, match))
+      .map((match) => ({
+        segments: subject.segments(match.index, match.index + match[0].length),
+        replacement: rule.replacementFor(match),
       }))
       .filter(({ segments }) =>
         segments.every(
           ({ node, start, end }) =>
-            isInScope(node, rule) && !this.#ledger.isSealed(node, start, end, rank),
+            scopeOf(node, rule.selector) && !this.#ledger.isSealed(node, start, end, rank),
         ),
       );
   }

@@ -1,10 +1,15 @@
 const text = (value) => (typeof value === 'string' ? value : '');
 
-const normalizeRule = (rule) => ({
-  censored: text(rule?.censored).trim(),
-  safe: text(rule?.safe),
-  selector: text(rule?.selector).trim(),
-});
+function normalizeRule(rule) {
+  const regex = rule?.regex === true;
+  const censored = text(rule?.censored);
+  return {
+    censored: regex ? censored : censored.trim(),
+    safe: text(rule?.safe),
+    selector: text(rule?.selector).trim(),
+    regex,
+  };
+}
 
 export const createPack = (name = 'New pack') => ({ name, enabled: true, rules: [] });
 
