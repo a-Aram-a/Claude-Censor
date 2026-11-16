@@ -75,10 +75,15 @@
   </template>
 
   <template id="fields-template">
-    <label>
-      <span>Censor</span>
-      <input name="censored" placeholder="Text to hide" autocomplete="off" spellcheck="false">
-    </label>
+    <div class="censor">
+      <label>
+        <span>Censor</span>
+        <input name="censored" placeholder="Text to hide" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="mode" title="Regular expression">
+        <input name="regex" type="checkbox" aria-label="Regular expression">.*
+      </label>
+    </div>
     <label>
       <span>Replace with</span>
       <input name="safe" placeholder="Nothing — the text is removed" autocomplete="off" spellcheck="false">
@@ -87,6 +92,10 @@
       <span>Inside</span>
       <input name="selector" placeholder="Everywhere — or a CSS selector" autocomplete="off" spellcheck="false">
     </label>
+    <small class="hint">
+      Pattern, case ignored: <code>\d{4}</code>. Write <code>/Name/</code> or <code>/a.b/s</code> to set the flags yourself.
+      Replacement takes <code>$1</code>, <code>$&lt;name&gt;</code>, <code>$&amp;</code>. With a selector, each matching element is searched on its own.
+    </small>
   </template>
 </body>
 </html>

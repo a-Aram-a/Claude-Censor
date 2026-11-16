@@ -1,4 +1,4 @@
-import { createPattern } from '../shared/matcher.js';
+import { createPattern, createRegex } from '../shared/matcher.js';
 import { resolveSelector } from '../shared/selector.js';
 
 const FIELDS = ['censored', 'safe', 'selector'];
@@ -10,14 +10,28 @@ export function mountFields(container) {
 
 export function fillRule(form, rule) {
   for (const name of FIELDS) form.elements[name].value = rule[name] ?? '';
+  form.elements.regex.checked = rule.regex === true;
 }
 
-export const readRule = (form) =>
-  Object.fromEntries(FIELDS.map((name) => [name, form.elements[name].value]));
+export const readRule = (form) => ({
+  ...Object.fromEntries(FIELDS.map((name) => [name, form.elements[name].value])),
+  regex: form.elements.regex.checked,
+});
+
+function censoredError({ censored, regex }) {
+  if (!regex) return createPattern(censored) ? '' : 'Enter the text to censor.';
+  if (!censored) return 'Enter the pattern to censor.';
+  try {
+    createRegex(censored);
+    return '';
+  } catch (error) {
+    return error.message.replace(/^.*\/[a-z]*: /s, 'Invalid pattern: ');
+  }
+}
 
 export function validateRule(form) {
   const { censored, selector } = form.elements;
-  censored.setCustomValidity(createPattern(censored.value) ? '' : 'Enter the text to censor.');
+  censored.setCustomValidity(censoredError(readRule(form)));
   selector.setCustomValidity(
     resolveSelector(selector.value) === null ? 'This is not a valid CSS selector.' : '',
   );

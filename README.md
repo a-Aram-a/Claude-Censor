@@ -21,6 +21,16 @@ Matching is:
 - **Whitespace-tolerant** — a space matches any run of spaces, NBSPs, tabs and line breaks.
 - **Markup-tolerant** — `b<b>a</b>d` and `b&ZeroWidthSpace;ad` both match `bad`.
 
+### Patterns
+
+Switch `.*` on next to the censored text to make it a regular expression (JavaScript syntax).
+
+- Case is ignored unless the pattern is written as a literal: `/Name/` is exact, `/a.b/s` sets the flags yourself.
+- The safe text takes `$1`, `$<name>`, `$&` and `$$`, and is used as typed.
+- Invisible characters are skipped as in plain rules. Whitespace is matched as written, so use `\s+` between words.
+- With a selector, each matching element is searched on its own: `^` and `$` are its start and end, and `.+` replaces its whole text. Without one, the pattern sees the page text joined as it is in the DOM, so elements with no space between them read as one word.
+- A match is looked for within about 1000 characters around a change. A pattern with runaway backtracking will slow every page down; nothing can interrupt it.
+
 Selectors may use raw ids and classes such as `#:r1:`; they are escaped when needed.
 
 Scripts, styles, text areas and editable content are never touched. Only text nodes are edited; elements are left as they are. Turning censoring off, or changing the rules, restores the original text first.
@@ -41,7 +51,7 @@ Packs can be exported to a JSON file, one at a time or all together, and importe
 ```
 src/
   shared/
-    matcher.js       rule → pattern and case-preserving replacement (pure)
+    matcher.js       rule → pattern and replacement, plain or regular expression (pure)
     packs.js         pack model, normalization of untrusted data
     schema.js        data version and upgrades for storage and export files
     transfer.js      JSON export format

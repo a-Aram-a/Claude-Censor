@@ -140,7 +140,7 @@ function createPackItem(pack) {
     refresh();
     savePacks();
     setDraft({});
-    newRule.reset();
+    fillRule(newRule, {});
     newRule.elements.censored.focus();
   });
 
@@ -172,7 +172,9 @@ function reveal(item) {
 }
 
 document.body.classList.toggle('popup', isPopup);
-document.addEventListener('input', ({ target }) => target.setCustomValidity(''));
+document.addEventListener('input', ({ target }) => {
+  for (const field of target.form?.elements ?? [target]) field.setCustomValidity('');
+});
 
 enabledToggle.checked = enabled;
 enabledToggle.addEventListener('change', () => saveSettings({ enabled: enabledToggle.checked }));

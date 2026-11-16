@@ -241,8 +241,53 @@ input:not(.switch):invalid {
   border-color: var(--danger);
 }
 
-input[name='selector'] {
+input[name='selector'],
+.fields:has([name='regex']:checked) input[name='censored'] {
   font: 12px/1.5 ui-monospace, monospace;
+}
+
+.censor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px;
+}
+
+.fields .mode {
+  display: block;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font: 12px/1.5 ui-monospace, monospace;
+  cursor: pointer;
+}
+
+.mode input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode:has(:checked) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.mode:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.hint {
+  display: none;
+  padding-left: 84px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.fields:has([name='regex']:checked) .hint {
+  display: block;
 }
 
 input::placeholder {
