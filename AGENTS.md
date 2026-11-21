@@ -15,6 +15,8 @@ npm test        # build, then node --test: unit tests + tests/dom.test.js drivin
 - `tests/dom.test.js` skips itself when Chrome is missing (`CHROME_BIN` overrides the macOS default path). A skip is not a pass: say so.
 - There is no automated test of the real extension. The popup, storage sync, drag reordering and the file dialog can only be checked by loading the folder unpacked at `chrome://extensions`. Report what was and was not verified.
 
+- Release commands, packaging, and tag conventions are documented in `README.md` under Releases. `python3 scripts/package.py` packages an already-built extension into git-ignored `release/`; CI requires Chrome and verifies tags before publication.
+
 ## Product requirements that must keep holding
 
 These come from the owner and define the direction of the project. Do not trade any of them away for a feature.

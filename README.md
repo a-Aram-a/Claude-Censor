@@ -4,6 +4,14 @@ A Chrome extension that replaces unwanted text on every page, in every frame and
 
 ## Install
 
+Download the **claude-censor-vVERSION.zip** asset from the [latest release](https://github.com/a-Aram-a/Claude-Censor/releases/latest), then extract it into a permanent folder. Do not download GitHub's automatic “Source code” archives: those require a build.
+
+Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and select the extracted folder containing `manifest.json`. Keep this folder after installation. No development tools are needed.
+
+Updates are manual: extract a newer release over the same folder, click **Reload** on the extension card, and reload open tabs. Use the same folder to preserve the extension's identity and settings.
+
+### Build from source
+
 ```sh
 npm install
 npm run build
@@ -81,3 +89,26 @@ npm test        # unit tests + a headless Chrome run of tests/fixture.html
 ```
 
 Set `CHROME_BIN` if Chrome is not in the default macOS location.
+
+## Releases
+
+GitHub Actions runs the unit and headless Chrome tests on pushes to `main`, pull requests, and version tags. Missing Chrome fails CI rather than skipping the DOM test. A passing tag build publishes a runtime-only ZIP and SHA-256 checksum to GitHub Releases. No repository secrets or manual GitHub settings are required.
+
+To publish, set the same version in `manifest.json`, `package.json`, and `package-lock.json`, commit and push, then push the matching tag:
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Use a new version and tag for each release. Tags must exactly match `v` plus the manifest version. Releases do not publish to the Chrome Web Store.
+
+To package a tested build locally (Python 3 required):
+
+```sh
+npm ci
+npm test
+python3 scripts/package.py
+```
+
+Artifacts are written to `release/`. Packaging preserves the popup's ES modules and includes compiled content scripts, shared modules, and PNG icons. Development dependencies, tests, and engine source files are excluded. The browser test exercises the DOM engine, not the installed extension; manually check the popup, storage, drag reordering, and import dialog before tagging.
